@@ -36,4 +36,4 @@ jobs:
         env
         ls
         which python
-        python lab111.py
+        python3 lab111.py
