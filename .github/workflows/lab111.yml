@@ -3,7 +3,7 @@ name: lab111-labcalendar
 on:
   push:
     branches: [ main ]
-  schedule:
+   schedule:
     - cron: "0 * * * *"
 
 jobs:
@@ -33,4 +33,7 @@ jobs:
         CLIENT_ID: ${{ secrets.CLIENT_ID }}
         CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
       run: |
-        python lab111.py
+        env
+	ls
+	which python
+	python lab111.py
