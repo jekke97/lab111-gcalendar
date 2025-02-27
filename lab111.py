@@ -1,13 +1,24 @@
+print("Loading libraries...")
 import re
+print("Loading libraries...")
 import os
+print("Loading libraries...")
 import time
+print("Loading libraries...")
 import json
+print("Loading libraries...")
 import requests
+print("Loading libraries...")
 from zoneinfo import ZoneInfo
+print("Loading libraries...")
 from bs4 import BeautifulSoup
+print("Loading libraries...")
 from datetime import datetime, date, timedelta, timezone
+print("Loading libraries...")
 from apiclient.discovery import build
+print("Loading libraries...")
 from google.oauth2 import service_account
+print("Loading libraries...")
 from google.oauth2.credentials import Credentials
 
 print('Acquiring secrets...')
