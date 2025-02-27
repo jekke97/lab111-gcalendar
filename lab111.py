@@ -70,11 +70,13 @@ def create_event(show):
 
 
 def main():
+    print('Acquiring credentials...')
     service = build('calendar', 'v3', credentials=get_credentials())
-
+    print('Credentials acquired.')
     ## Scraping
     soup = BeautifulSoup(requests.get(LAB111_URL).content, "lxml")
     program = []
+    print('Scraping...')
     for day in range(FORECAST):
         movielist = soup.find_all('tr', class_=f'day{day}')
         movielist = movielist[1:]
@@ -98,7 +100,7 @@ def main():
             except:
                 continue
         print(f'Day {day+1} forecasted.')
-
+    print('Scraping done.')
 
     #Create calendar if needed
     calendars = service.calendarList().list().execute()
@@ -112,7 +114,7 @@ def main():
     else:
         print('Calendar already exists.')
 
-
+    print('Retrieving calendar id...')
     # get calendard id of lab111 calendar
     for cal in calendars['items']:
         if cal['summary'] == 'lab111':
@@ -133,11 +135,12 @@ def main():
         if not page_token:
             break
 
-
+    print('Adding events...')
     # add events
     for show in program:
         service.events().insert(calendarId = calendar_id, body = create_event(show)).execute()
         time.sleep(.3)
+    print('Done!')
 
 if __name__ == '__main__':
     main()
