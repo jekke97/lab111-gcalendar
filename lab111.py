@@ -10,13 +10,14 @@ from apiclient.discovery import build
 from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 
+print('Acquiring secrets...')
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 LAB111_URL = "https://www.lab111.nl/programma/listview/"
 FORECAST = 14 # in days
 REFRESH_TOKEN = os.environ.get("REFRESH_TOKEN","")
 CLIENT_ID = os.environ.get("CLIENT_ID","")
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET","")
-
+print('Secrets acquired.')
 
 def get_new_access_token():
     params = {
