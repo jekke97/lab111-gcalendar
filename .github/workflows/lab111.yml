@@ -34,6 +34,6 @@ jobs:
         CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
       run: |
         env
-	ls
-	which python
-	python lab111.py
+        ls
+        which python
+        python lab111.py
