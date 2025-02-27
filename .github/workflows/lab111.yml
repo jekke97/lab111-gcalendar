@@ -3,7 +3,7 @@ name: lab111-labcalendar
 on:
   push:
     branches: [ main ]
-   schedule:
+  schedule:
     - cron: "0 * * * *"
 
 jobs:
