@@ -133,7 +133,8 @@ def main():
         calendar_id = next(c["id"] for c in calendars["items"] if c["summary"] == "lab111")
         print("Calendar already exists.")
 
-    # Delete events in forecast window
+    # Fetch existing events in the forecast window; key them by ticket URL
+    existing = {}  # ticket_url -> event_id
     page_token = None
     while True:
         events = service.events().list(
@@ -143,28 +144,43 @@ def main():
             pageToken=page_token,
         ).execute()
         for event in events["items"]:
-            service.events().delete(calendarId=calendar_id, eventId=event["id"]).execute()
+            match = re.search(r"<a href=([^\s>]+)>Ticket</a>", event.get("description", ""))
+            if match:
+                existing[match.group(1)] = event["id"]
         page_token = events.get("nextPageToken")
         if not page_token:
             break
-    print("Existing events cleared.")
+    print(f"Found {len(existing)} existing events in calendar.")
 
-    # Add new events
-    print("Adding events...")
-    for show in program:
+    program_tickets  = {show["ticket"] for show in program}
+    existing_tickets = set(existing)
+
+    # Delete events that were cancelled (in calendar but no longer on the website)
+    removed = existing_tickets - program_tickets
+    for ticket_url in removed:
+        service.events().delete(calendarId=calendar_id, eventId=existing[ticket_url]).execute()
+        time.sleep(0.3)
+    if removed:
+        print(f"Removed {len(removed)} cancelled events.")
+
+    # Add only new events (not already in calendar)
+    to_add = [show for show in program if show["ticket"] not in existing_tickets]
+    print(f"Adding {len(to_add)} new events ({len(program) - len(to_add)} already exist)...")
+    for show in to_add:
         service.events().insert(calendarId=calendar_id, body=create_event(show, today)).execute()
         time.sleep(0.3)
     print("Done!")
 
-    return len(program), skipped
+    return len(to_add), len(removed), skipped
 
 
 if __name__ == "__main__":
     try:
-        added, skipped = main()
+        added, removed, skipped = main()
         send_telegram(
             f"✅ lab111 calendar updated\n"
-            f"Events added: {added}\n"
+            f"New events added: {added}\n"
+            f"Cancelled events removed: {removed}\n"
             f"Entries skipped: {skipped}\n"
             f"Run: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
         )
