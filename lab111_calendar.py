@@ -181,18 +181,50 @@ def main():
 
 
 if __name__ == "__main__":
+    run_time = datetime.now().strftime("%Y-%m-%d, %H:%M")
     try:
         added, removed, skipped = main()
         send_telegram(
-            f"✅ lab111 calendar updated\n"
-            f"New events added: {added}\n"
-            f"Cancelled events removed: {removed}\n"
-            f"Entries skipped: {skipped}\n"
-            f"Run: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+            f"Masterrrr! 🧟\n"
+            f"\n"
+            f"The calendar... IT'S ALIVE! IT'S ALIIIIVE!\n"
+            f"\n"
+            f"I have done the thing you asked, with these two hands and this one hump:\n"
+            f"\n"
+            f"— Lab: lab111 (the spooky one, yes?)\n"
+            f"— Events added: {added} (sweet little baby events, all breathing)\n"
+            f"— Entries skipped: {skipped} (don't ask, master, they were... not ready)\n"
+            f"— Run completed: {run_time} sharp, on the dot, like a clock made of bones\n"
+            f"\n"
+            f"What hump?\n"
+            f"\n"
+            f"Awaiting your next command, master. I shall be in the corner, sharpening things.\n"
+            f"\n"
+            f"— Eye-gor"
         )
     except Exception:
+        tb = traceback.format_exc()[-1500:]  # Telegram max 4096 chars; keep tail of traceback
         send_telegram(
-            f"❌ lab111 calendar crashed\n\n"
-            f"{traceback.format_exc()}"
+            f"Masterrrr... 🪦\n"
+            f"\n"
+            f"We have a... situation. A small one. Medium small. Possibly large.\n"
+            f"\n"
+            f"I was running the calendar sync for lab111, exactly as you instructed (I swear on my hump), and then... well. The thunder. The screaming. The stack trace.\n"
+            f"\n"
+            f"Here is what I know before everything went sideways:\n"
+            f"\n"
+            f"— Lab: lab111\n"
+            f"— Events added: (unclear — some made it through, some are wandering the moors)\n"
+            f"— Run attempted: {run_time}\n"
+            f"— Status: 🚨 needs a human with opposable thumbs and admin access\n"
+            f"\n"
+            f"{tb}\n"
+            f"\n"
+            f"Shall I retry, master? Or should we put this one back in the ground where we found it?\n"
+            f"\n"
+            f"Waiting by the lever,\n"
+            f"— Eye-gor\n"
+            f"\n"
+            f"P.S. It could be worse. It could be raining. ⛈️"
         )
         raise
