@@ -77,6 +77,28 @@ def test_api_error_propagates_from_sync():
         gcalendar.sync([_ev("uid-new")], "test-cal", service, _WIN_START, _WIN_END)
 
 
+def test_uid_with_spaces_roundtrips_correctly():
+    """UIDs containing spaces (e.g. MTGO 'Pauper Prelim') must survive the write→read roundtrip.
+
+    Bug: regex [^ ]+ stopped at the first space, so 'mtgo:123:Pauper Prelim' was read back
+    as 'mtgo:123:Pauper' — mismatch caused the same event to be inserted on every sync run.
+    """
+    uid = "mtgo:1734567890:Pauper Prelim"  # contains spaces
+    existing_gcal = {
+        "id": "gcal_event_id",
+        "description": f"<!-- uid:{uid} -->",
+    }
+
+    service = _service_with_calendar("MTG Tournaments", "cal1", existing_events=[existing_gcal])
+
+    added, removed = gcalendar.sync(
+        [_ev(uid)], "MTG Tournaments", service, _WIN_START, _WIN_END,
+    )
+
+    assert added == 0,   "event whose UID contains spaces must not be re-inserted every run"
+    assert removed == 0, "event whose UID contains spaces must not be incorrectly removed"
+
+
 def test_event_with_same_uid_not_updated():
     """Documents limitation: sync() never calls update/patch — a changed event keeps its old data.
 

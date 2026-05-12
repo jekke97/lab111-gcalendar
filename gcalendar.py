@@ -28,7 +28,7 @@ def get_service():
 
 def _uid_from_gcal_event(event: dict) -> str | None:
     desc = event.get("description") or ""
-    m = re.search(r"<!-- uid:([^ ]+) -->", desc)
+    m = re.search(r"<!-- uid:(.+?) -->", desc)
     if m:
         return m.group(1)
     # Legacy lab111 format (backward compat for events created before refactor)
