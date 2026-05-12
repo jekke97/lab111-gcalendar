@@ -133,14 +133,20 @@ def main():
         calendar_id = next(c["id"] for c in calendars["items"] if c["summary"] == "lab111")
         print("Calendar already exists.")
 
-    # Fetch existing events in the forecast window; key them by ticket URL
+    # Fetch existing events in the forecast window; key them by ticket URL.
+    # Use start of today (Amsterdam time) as timeMin so past events from today
+    # are included and not duplicated on re-runs.
+    amsterdam  = ZoneInfo("Europe/Amsterdam")
+    day_start  = datetime.now(amsterdam).replace(hour=0, minute=0, second=0, microsecond=0)
+    day_end    = day_start + timedelta(days=forecast)
+
     existing = {}  # ticket_url -> event_id
     page_token = None
     while True:
         events = service.events().list(
             calendarId=calendar_id,
-            timeMin=datetime.now(timezone.utc).isoformat(),
-            timeMax=(datetime.now(timezone.utc) + timedelta(days=forecast)).isoformat(),
+            timeMin=day_start.isoformat(),
+            timeMax=day_end.isoformat(),
             pageToken=page_token,
         ).execute()
         for event in events["items"]:
