@@ -1,7 +1,7 @@
 """Lab111 cinema → Google Calendar sync."""
 
 import sys
-from datetime import timedelta
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import igor
