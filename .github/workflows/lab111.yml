@@ -26,4 +26,6 @@ jobs:
         REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
         CLIENT_ID: ${{ secrets.CLIENT_ID }}
         CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: python3 lab111_calendar.py

@@ -3,6 +3,7 @@ import re
 import os
 import sys
 import time
+import traceback
 import requests
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -25,7 +26,22 @@ DEFAULT_FORECAST = 14
 REFRESH_TOKEN    = os.environ.get("REFRESH_TOKEN", "")
 CLIENT_ID        = os.environ.get("CLIENT_ID", "")
 CLIENT_SECRET    = os.environ.get("CLIENT_SECRET", "")
+TELEGRAM_TOKEN   = os.environ.get("TELEGRAM_TOKEN", "")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 print("Secrets acquired.")
+
+
+def send_telegram(text):
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+        return
+    try:
+        requests.post(
+            f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+            data={"chat_id": TELEGRAM_CHAT_ID, "text": text},
+            timeout=10,
+        )
+    except Exception as e:
+        print(f"Telegram notification failed: {e}")
 
 
 def get_new_access_token():
@@ -81,8 +97,9 @@ def main():
     today = datetime.now()
 
     # Scraping
-    soup    = BeautifulSoup(requests.get(LAB111_URL).content, "lxml")
-    program = []
+    soup     = BeautifulSoup(requests.get(LAB111_URL).content, "lxml")
+    program  = []
+    skipped  = 0
     print("Scraping...")
     for day in range(forecast):
         for movie in soup.find_all("tr", class_=f"day{day}")[1:]:
@@ -102,6 +119,7 @@ def main():
                 })
             except Exception as e:
                 print(f"  Skipping entry on day {day}: {e}")
+                skipped += 1
         print(f"Day {day + 1} scraped.")
     print("Scraping done.")
 
@@ -138,6 +156,21 @@ def main():
         time.sleep(0.3)
     print("Done!")
 
+    return len(program), skipped
+
 
 if __name__ == "__main__":
-    main()
+    try:
+        added, skipped = main()
+        send_telegram(
+            f"✅ lab111 calendar updated\n"
+            f"Events added: {added}\n"
+            f"Entries skipped: {skipped}\n"
+            f"Run: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        )
+    except Exception:
+        send_telegram(
+            f"❌ lab111 calendar crashed\n\n"
+            f"{traceback.format_exc()}"
+        )
+        raise
