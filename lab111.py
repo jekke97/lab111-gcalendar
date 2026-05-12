@@ -7,7 +7,7 @@ import requests
 from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
 from datetime import datetime, date, timedelta, timezone
-from apiclient.discovery import build
+from googleapiclient.discovery import build
 from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 
@@ -47,14 +47,13 @@ def check_lab(result):
     return any(cal['summary'] == 'lab111' for cal in result['items'])
 
 
-def create_event(show):
-    now      = datetime.now()
+def create_event(show, today):
     tz       = ZoneInfo("Europe/Amsterdam").key
-    starT    = [int(x) for x in show['s_time'].split(':')] # hour and minutes
+    starT    = [int(x) for x in show['s_time'].split(':')]
     duration = [int(x) for x in re.findall(r'\d+', show['duration'])]
-    startTime= datetime(now.year, now.month, now.day, starT[0], starT[1]) + timedelta(days=show['day'])#fix day sum (31 +1 yields 32)
-    endTime  = startTime + timedelta(hours=duration[0], minutes=duration[1]) + timedelta(minutes=14)
-    
+    startTime= datetime(today.year, today.month, today.day, starT[0], starT[1]) + timedelta(days=show['day'])
+    endTime  = startTime + timedelta(hours=duration[0], minutes=duration[1])
+
     event    = {
       'summary': show['name'],
       'location': show['lab'],
@@ -63,7 +62,7 @@ def create_event(show):
         'dateTime': startTime.isoformat(),
         'timeZone': tz,
       },
-      'end': { 
+      'end': {
         'dateTime': endTime.isoformat(),
         'timeZone': tz,
       }
@@ -75,6 +74,7 @@ def main():
     print('Acquiring credentials...')
     service = build('calendar', 'v3', credentials=get_credentials())
     print('Credentials acquired.')
+    today = datetime.now()
     ## Scraping
     soup = BeautifulSoup(requests.get(LAB111_URL).content, "lxml")
     program = []
@@ -82,14 +82,13 @@ def main():
     for day in range(FORECAST):
         movielist = soup.find_all('tr', class_=f'day{day}')
         movielist = movielist[1:]
-        
-        for movie in movielist: 
+
+        for movie in movielist:
             try:
                 movie_url = re.findall('(?P<url>https?://[^\s]+")',str(movie))[1]
-                movie_url = movie_url[:-1]        
-                
-                shows = dict()
-                shows ={
+                movie_url = movie_url[:-1]
+
+                shows = {
                   "s_time": movie.findAll('a')[0].text,
                   "duration": BeautifulSoup(requests.get(movie_url).content, 'lxml').find_all('ul', class_="speelduur")[0].text,
                   "name": movie.findAll('a')[1].text,
@@ -99,7 +98,8 @@ def main():
                   "info": movie.findAll('a')[1]['href']
                 }
                 program.append(shows)
-            except:
+            except Exception as e:
+                print(f"Skipping entry on day {day}: {e}")
                 continue
         print(f'Day {day+1} forecasted.')
     print('Scraping done.')
@@ -112,22 +112,20 @@ def main():
         'timeZone': 'Europe/Amsterdam',
         }
         created_calendar = service.calendars().insert(body=calendar).execute()
+        calendar_id = created_calendar['id']
         print('Calendar created.')
     else:
         print('Calendar already exists.')
-
-    print('Retrieving calendar id...')
-    # get calendard id of lab111 calendar
-    for cal in calendars['items']:
-        if cal['summary'] == 'lab111':
-            calendar_id = cal['id']
+        for cal in calendars['items']:
+            if cal['summary'] == 'lab111':
+                calendar_id = cal['id']
 
     page_token = None
     while True:
         #find all events in the next two weeks
-        events = service.events().list(calendarId=calendar_id, 
-                                     timeMin=(datetime.now(timezone.utc)).isoformat(), # yesterday
-                                     timeMax=(datetime.now(timezone.utc) + timedelta(days=FORECAST)).isoformat(),# two weeks
+        events = service.events().list(calendarId=calendar_id,
+                                     timeMin=(datetime.now(timezone.utc)).isoformat(),
+                                     timeMax=(datetime.now(timezone.utc) + timedelta(days=FORECAST)).isoformat(),
                                      pageToken=page_token).execute()
 
         for event in events["items"]:
@@ -138,9 +136,8 @@ def main():
             break
 
     print('Adding events...')
-    # add events
     for show in program:
-        service.events().insert(calendarId = calendar_id, body = create_event(show)).execute()
+        service.events().insert(calendarId = calendar_id, body = create_event(show, today)).execute()
         time.sleep(.3)
     print('Done!')
 
