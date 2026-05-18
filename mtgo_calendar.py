@@ -22,11 +22,11 @@ def main() -> None:
     events = scrape_mtgo(days=DEFAULT_FORECAST, tz=TZ) + scrape_dpl(tz=TZ)
 
     igor.run(
-        events, "MTG Tournaments", win_start, win_end,
-        message=lambda a, r: f"*MTG Tournaments* — {a} added, {r} removed. They stir, master.\n— Eye-gor",
+        events, "Pauper Tournaments", win_start, win_end,
+        message=lambda a, r: f"*Pauper Tournaments* — {a} added, {r} removed. They stir, master.\n— Eye-gor",
     )
 
 
 if __name__ == "__main__":
-    with igor.notify_on_error("MTG Tournaments"):
+    with igor.notify_on_error("Pauper Tournaments"):
         main()

@@ -145,6 +145,7 @@ def _build_monster(base: list, rcq: dict, showcase: dict, today: date) -> list:
 def _simplify_name(part: str) -> str:
     name = re.sub(r"^Pauper ", "", part)
     name = re.sub(r" (\d+) Players$", r" (\1 players)", name)
+    name = re.sub(r"\((\d+)-player\)", r"(\1 players)", name)
     return name
 
 

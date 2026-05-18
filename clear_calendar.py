@@ -1,6 +1,6 @@
 """
 Deletes events from a chosen calendar between yesterday and end of next month.
-Usage: python clear_calendar.py [lab111|mtgo]
+Usage: python clear_calendar.py [lab111|pauper]
        If no argument is given, you are prompted to choose.
 """
 import os
@@ -22,8 +22,8 @@ if _env.exists():
             os.environ.setdefault(_k.strip(), _v.strip())
 
 CALENDARS = {
-    "lab111": "lab111",
-    "mtgo":   "MTG Tournaments",
+    "lab111":  "lab111",
+    "pauper":  "Pauper Tournaments",
 }
 
 REFRESH_TOKEN = os.environ.get("REFRESH_TOKEN", "")
