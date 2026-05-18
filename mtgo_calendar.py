@@ -10,7 +10,7 @@ from scrapers.mtgo import scrape as scrape_mtgo
 from scrapers.dpl  import scrape as scrape_dpl
 
 TZ = "Europe/Rome"
-DEFAULT_FORECAST = 14
+DEFAULT_FORECAST = 60
 
 
 def main() -> None:

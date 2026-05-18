@@ -10,17 +10,17 @@ _TZ = "Europe/Amsterdam"
 # (year, month, day, hour, minute, title, location)
 _DPL_2026 = [
     (2026,  6,  4, 20, 0, "DPL Online Series #3",      "MTGO"),
-    (2026,  6,  6, 10, 0, "DPL - 3° Leg – 2026",       "Pondok"),
+    (2026,  6,  6, 10, 0, "DPL - 3° Leg – 2026",       "Pondok (Amsterdam)"),
     (2026,  7,  2, 20, 0, "DPL Online Series #4",      "MTGO"),
-    (2026,  7,  4, 10, 0, "DPL - 4° Leg – 2026",       "Pondok"),
+    (2026,  7,  4, 10, 0, "DPL - 4° Leg – 2026",       "Pondok (Amsterdam)"),
     (2026,  8,  6, 20, 0, "DPL Online Series #5",      "MTGO"),
-    (2026,  8,  8, 10, 0, "DPL - 5° Leg – 2026",       "Pondok"),
+    (2026,  8,  8, 10, 0, "DPL - 5° Leg – 2026",       "Pondok (Amsterdam)"),
     (2026,  9,  3, 20, 0, "DPL Online Series #6",      "MTGO"),
-    (2026,  9,  5, 10, 0, "DPL - 6° Leg – 2026",       "Pondok"),
+    (2026,  9,  5, 10, 0, "DPL - 6° Leg – 2026",       "Pondok (Amsterdam)"),
     (2026, 10,  1, 20, 0, "DPL Online Series #7",      "MTGO"),
-    (2026, 10,  3, 10, 0, "DPL - 7° Leg – 2026",       "Pondok"),
+    (2026, 10,  3, 10, 0, "DPL - 7° Leg – 2026",       "Pondok (Amsterdam)"),
     (2026, 11,  5, 20, 0, "DPL Online Series #8",      "MTGO"),
-    (2026, 11,  7, 10, 0, "DPL - 8° Leg – 2026",       "Pondok"),
+    (2026, 11,  7, 10, 0, "DPL - 8° Leg – 2026",       "Pondok (Amsterdam)"),
     (2026, 12, 12, 10, 0, "DPL - Invitational - 2026", "Amsterdam"),
 ]
 
@@ -37,6 +37,7 @@ def _fnm_events(tz: str, now: datetime) -> list[CalendarEvent]:
                 title="FNM",
                 start=start,
                 end=start + timedelta(hours=4),
+                location="2 Klaveren (Amsterdam)",
                 uid=f"fnm:{d.isoformat()}",
                 timezone=tz,
             ))
