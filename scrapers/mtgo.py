@@ -142,6 +142,12 @@ def _build_monster(base: list, rcq: dict, showcase: dict, today: date) -> list:
 
 # ── public API ────────────────────────────────────────────────────────────────
 
+def _simplify_name(part: str) -> str:
+    name = re.sub(r"^Pauper ", "", part)
+    name = re.sub(r" (\d+) Players$", r" (\1 players)", name)
+    return name
+
+
 def scrape(days: int = 14, tz: str = "Europe/Rome") -> list[CalendarEvent]:
     """Fetch Pauper events for the next `days` days and return as CalendarEvent list."""
     js      = _fetch_js("scheduleData.js")
@@ -180,10 +186,10 @@ def scrape(days: int = 14, tz: str = "Europe/Rome") -> list[CalendarEvent]:
                     seen.add(key)
                     uid = f"mtgo:{round(ts)}:{part}"
                     events.append(CalendarEvent(
-                        title       = f"MTGO: {part}",
+                        title       = _simplify_name(part),
                         start       = dt,
                         end         = dt + timedelta(hours=6),
-                        location    = "Magic Online (MTGO)",
+                        location    = "MTGO",
                         description = '<a href="https://mtgoupdate.com">mtgoupdate.com</a>',
                         uid         = uid,
                         timezone    = tz,
@@ -204,6 +210,6 @@ def format_week(events: list[CalendarEvent], tz_label: str = "IT") -> str:
         if day != current_day:
             lines.append(f"\n*{day}*")
             current_day = day
-        name = ev.title.removeprefix("MTGO: ")
+        name = ev.title
         lines.append(f"  {ev.start.strftime('%H:%M')} {tz_label} — {name}")
     return "\n".join(lines)

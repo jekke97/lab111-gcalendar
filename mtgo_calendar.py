@@ -1,4 +1,4 @@
-"""MTGO Pauper schedule → Google Calendar sync."""
+"""MTGO Pauper + Dutch Pauper League → Google Calendar sync."""
 
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -6,26 +6,27 @@ from zoneinfo import ZoneInfo
 import igor
 igor.load_env()
 
-from scrapers.mtgo import scrape
+from scrapers.mtgo import scrape as scrape_mtgo
+from scrapers.dpl  import scrape as scrape_dpl
 
 TZ = "Europe/Rome"
-
-
 DEFAULT_FORECAST = 14
 
 
 def main() -> None:
-    events    = scrape(days=DEFAULT_FORECAST, tz=TZ)
     local     = ZoneInfo(TZ)
     win_start = datetime.now(local).replace(hour=0, minute=0, second=0, microsecond=0)
-    win_end   = win_start + timedelta(days=DEFAULT_FORECAST)
+    # Wide enough to cover all hardcoded DPL 2026 events
+    win_end   = datetime(2026, 12, 31, 23, 59, 59, tzinfo=local)
+
+    events = scrape_mtgo(days=DEFAULT_FORECAST, tz=TZ) + scrape_dpl(tz=TZ)
 
     igor.run(
         events, "MTG Tournaments", win_start, win_end,
-        message=lambda a, r: f"*MTGO Pauper* — {a} added, {r} removed. They stir, master.\n— Eye-gor",
+        message=lambda a, r: f"*MTG Tournaments* — {a} added, {r} removed. They stir, master.\n— Eye-gor",
     )
 
 
 if __name__ == "__main__":
-    with igor.notify_on_error("MTGO"):
+    with igor.notify_on_error("MTG Tournaments"):
         main()
