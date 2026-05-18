@@ -7,7 +7,12 @@ Currently ships two scrapers:
 | Scraper | Source | Calendar |
 |---|---|---|
 | **Lab111** | [lab111.nl](https://www.lab111.nl/programma/listview/) cinema programme | `lab111` |
-| **MTGO Pauper** | [mtgoupdate.com](https://mtgoupdate.com) tournament schedule | `MTG Tournaments` |
+| **Pauper Tournaments** | [mtgoupdate.com](https://mtgoupdate.com) + hardcoded DPL/FNM | `Pauper Tournaments` |
+
+The **Pauper Tournaments** calendar combines three sources into one view:
+- **MTGO** — online Pauper events (Prelims, Challenges) from mtgoupdate.com, rolling 60-day window
+- **DPL** — Dutch Pauper League 2026 paper legs and online series at Pondok (Amsterdam) and on MTGO
+- **FNM** — biweekly Friday Night Magic at 2 Klaveren (Amsterdam), 19:30–23:30
 
 ---
 
@@ -17,7 +22,8 @@ Each scraper produces a list of `CalendarEvent` objects. The orchestrator (`igor
 
 ```
 scrapers/lab111.py  ─┐
-scrapers/mtgo.py   ─┤─→ igor.run() → gcalendar.sync() → Google Calendar
+scrapers/mtgo.py    ─┤─→ igor.run() → gcalendar.sync() → Google Calendar
+scrapers/dpl.py     ─┤
                      └─→ telegram.send() → Telegram
 ```
 
@@ -34,15 +40,16 @@ telegram.py              — Telegram notification wrapper
 scrapers/
   __init__.py            — CalendarEvent dataclass
   lab111.py              — Lab111 cinema scraper
-  mtgo.py                — MTGO Pauper schedule scraper
+  mtgo.py                — MTGO Pauper schedule scraper (mtgoupdate.com)
+  dpl.py                 — Dutch Pauper League 2026 + biweekly FNM (hardcoded)
 lab111_calendar.py       — entry point: Lab111 → Google Calendar
-mtgo_calendar.py         — entry point: MTGO → Google Calendar
+pauper_calendar.py       — entry point: MTGO + DPL + FNM → "Pauper Tournaments"
 tests/
   test_lab111.py         — tests for lab111 scraper fragile points
   test_gcalendar.py      — tests for gcalendar fragile points
 get_token.py             — one-time OAuth setup: gets a refresh token and writes .env
 get_chat_id.py           — one-time Telegram setup: finds your chat ID
-clear_calendar.py        — utility: deletes events in a date window
+clear_calendar.py        — utility: deletes events in a date window (lab111 or pauper)
 requirements.txt         — Python dependencies
 .github/workflows/
   lab111.yml             — combined scraper workflow (runs both scrapers nightly)
@@ -55,7 +62,7 @@ requirements.txt         — Python dependencies
 ## Adding a new scraper
 
 1. Create `scrapers/yourname.py` with a `scrape()` function that returns `list[CalendarEvent]`
-2. Create `yourname_calendar.py` as an entry point (copy `mtgo_calendar.py` as a template)
+2. Create `yourname_calendar.py` as an entry point (copy `pauper_calendar.py` as a template)
 3. Add a job to `.github/workflows/lab111.yml`
 
 The `CalendarEvent` dataclass lives in `scrapers/__init__.py`. Set `uid` to something that uniquely identifies each occurrence — timestamp + event name is a reliable choice.
@@ -171,9 +178,9 @@ The `TELEGRAM_*` lines are optional.
 python lab111_calendar.py
 ```
 
-**MTGO** (syncs the next 14 days, no prompt):
+**Pauper Tournaments** (syncs MTGO 60-day window + all DPL/FNM, no prompt):
 ```bash
-python mtgo_calendar.py
+python pauper_calendar.py
 ```
 
 Both scripts load `.env` automatically, sync to Google Calendar, and send a Telegram message.
@@ -188,10 +195,10 @@ Two workflows run automatically:
 
 Triggers on push to `main`, every night at midnight UTC, and manually via `workflow_dispatch`.
 
-Runs two parallel jobs — `lab111` and `mtgo` — each on its own runner. If one fails, the other still runs and sends its own Telegram notification. Each job sends one short message:
+Runs two parallel jobs — `lab111` and `pauper` — each on its own runner. If one fails, the other still runs and sends its own Telegram notification. Each job sends one short message:
 
 - `*Lab111* — {n} added, {n} removed. What hump? — Eye-gor`
-- `*MTGO Pauper* — {n} added, {n} removed. They stir, master. — Eye-gor`
+- `*Pauper Tournaments* — {n} added, {n} removed. They stir, master. — Eye-gor`
 
 On error, `notify_on_error` catches the exception, sends a Telegram error report with a truncated traceback, and re-raises so the workflow job fails visibly.
 
@@ -245,10 +252,10 @@ The test suite covers the fragile points in both scrapers and the calendar sync 
 ### Clear a calendar
 
 ```bash
-python clear_calendar.py
+python clear_calendar.py [lab111|pauper]
 ```
 
-Deletes all events between yesterday and the end of next month from the `lab111` calendar. Useful for a clean resync. Shows what it found and asks you to confirm by typing `lab111` before deleting.
+Deletes all events between yesterday and the end of next month from the chosen calendar. Useful for a clean resync. Shows what it found and asks you to confirm by typing the calendar name before deleting.
 
 ---
 
