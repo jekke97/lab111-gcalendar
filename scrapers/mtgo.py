@@ -101,8 +101,8 @@ def _insert_event(normal: str, special: str, replace: bool) -> str:
     return normal.split("&minus")[0] + "&" + special.split(delim)[1]
 
 
-def _insert_into_monster(monster: list, today: date, events: dict, is_replacement: bool) -> None:
-    for i in range(9):
+def _insert_into_monster(monster: list, today: date, events: dict, is_replacement: bool, span: int) -> None:
+    for i in range(span):
         d = today + timedelta(days=i - 1)
         day_events = events.get(d)
         if not day_events:
@@ -122,11 +122,13 @@ def _insert_into_monster(monster: list, today: date, events: dict, is_replacemen
                 monster[idx] = _insert_event(current, event or "", not additive)
 
 
-def _build_monster(base: list, rcq: dict, showcase: dict, today: date) -> list:
-    """Replicate getMonsterSchedule(today). Returns 217-element array starting at PT midnight of today-1."""
-    triple  = base * 3
-    js_day  = today.isoweekday() % 7  # 0=Sun … 6=Sat
-    monster = triple[24 * (6 + js_day): 24 * (15 + js_day) + 1]
+def _build_monster(base: list, rcq: dict, showcase: dict, today: date, days: int) -> list:
+    """Build schedule array covering yesterday + `days` days ahead."""
+    span     = days + 2                  # yesterday + days + 1 buffer
+    repeated = base * (span // 7 + 3)   # enough weeks to cover the window
+    js_day   = today.isoweekday() % 7   # 0=Sun … 6=Sat
+    start    = 24 * (6 + js_day)
+    monster  = repeated[start: start + span * 24 + 1]
 
     all_rcq: dict[date, dict] = {d: dict(ev) for d, ev in rcq.items()}
     for d, ev in _dst_events(today).items():
@@ -135,8 +137,8 @@ def _build_monster(base: list, rcq: dict, showcase: dict, today: date) -> list:
         else:
             all_rcq[d] = dict(ev)
 
-    _insert_into_monster(monster, today, showcase, is_replacement=True)
-    _insert_into_monster(monster, today, all_rcq,  is_replacement=False)
+    _insert_into_monster(monster, today, showcase, is_replacement=True,  span=span)
+    _insert_into_monster(monster, today, all_rcq,  is_replacement=False, span=span)
     return monster
 
 
@@ -157,7 +159,7 @@ def scrape(days: int = 14, tz: str = "Europe/Rome") -> list[CalendarEvent]:
     showcase = _parse_special(js, "getShowcaseData")
 
     today   = date.today()
-    monster = _build_monster(base, rcq, showcase, today)
+    monster = _build_monster(base, rcq, showcase, today, days)
 
     local_tz    = ZoneInfo(tz)
     yesterday   = today - timedelta(days=1)
